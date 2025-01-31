@@ -56,7 +56,7 @@ try:
 
     # Step 2: Wait for and click the registration button
     registration_button_xpath = "//button[contains(@class, 'operation-button') and contains(text(), 'Rejestracja – składanie wniosku o legalizację pobytu dla cudzoziemców')]"
-    registration_button = WebDriverWait(driver, 10).until(
+    registration_button = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, registration_button_xpath))
     )
     registration_button.click()

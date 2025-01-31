@@ -2,6 +2,7 @@ import os
 import asyncio
 from dotenv import load_dotenv
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -15,9 +16,11 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 WEBPAGE_URL = "https://webqms.lublin.uw.gov.pl/"
 
+
 async def send_telegram_message(token, chat_id, message):
     application = ApplicationBuilder().token(token).build()
     await application.bot.send_message(chat_id=chat_id, text=message)
+
 
 def wait_for_dalej_button(driver):
     try:
@@ -32,13 +35,17 @@ def wait_for_dalej_button(driver):
         print(f"Error clicking Dalej button: {e}")
         return False
 
+
 def setup_selenium_driver():
     chrome_options = Options()
     chrome_options.add_argument("--headless")  # Run in headless mode
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Chrome(options=chrome_options)
+
+    service = Service()  # No need to specify path; Selenium will handle it
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     return driver
+
 
 try:
     # Initialize the Selenium WebDriver with headless options
@@ -60,7 +67,7 @@ try:
         raise Exception("Failed to click the 'Dalej' button.")
 
     # Step 4: Check if the specified message is present on the next page
-    no_reservations_message_xpath = "//h5[contains(text(), 'Brak dostępnych rezerwacji w okresie od 01.02.2025 do 02.04.2025')]"
+    no_reservations_message_xpath = "//h5[contains(text(), 'Brak dostępnych rezerwacji w okresie')]"
     try:
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, no_reservations_message_xpath))
@@ -73,5 +80,6 @@ try:
         asyncio.run(send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, message))
 
 finally:
-    # Close the browser
-    driver.quit()
+    # Close the browser if driver was successfully initialized
+    if 'driver' in locals() and driver is not None:
+        driver.quit()
